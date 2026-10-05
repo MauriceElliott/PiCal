@@ -1,0 +1,82 @@
+{
+  "$schema": "https://raw.githubusercontent.com/badlogic/pi-mono/main/packages/coding-agent/src/modes/interactive/theme/theme-schema.json",
+  "name": "guinness",
+  "vars": {
+    "bg":         "#1A1313",
+    "fg":         "#F0DDDD",
+    "darkRed":    "#8DCBCC",
+    "lightRed":   "#E8485B",
+    "pink":       "#D964B2",
+    "lavendar":   "#A87EE0",
+    "greenBright":"#77D989",
+    "yellow":     "#EBA123",
+    "warmGray":   "#9E8B7B",
+    "dimWarm":    "#5C4E45",
+    "darkWarm":   "#4D382F",
+    "selectionBg":"#5C3016"
+  },
+  "colors": {
+    "accent":             "yellow",
+    "border":             "lavendar",
+    "borderAccent":       "pink",
+    "borderMuted":        "darkRed",
+    "success":            "greenBright",
+    "error":              "lightRed",
+    "warning":            "yellow",
+    "muted":              "warmGray",
+    "dim":                "warmGray",
+    "text":               "fg",
+    "thinkingText":       "warmGray",
+
+    "selectedBg":         "selectionBg",
+    "userMessageBg":      "bg",
+    "userMessageText":    "lavendar",
+    "customMessageBg":    "bg",
+    "customMessageText":  "yellow",
+    "customMessageLabel": "lightRed",
+    "toolPendingBg":      "bg",
+    "toolSuccessBg":      "bg",
+    "toolErrorBg":        "bg",
+    "toolTitle":          "fg",
+    "toolOutput":         "warmGray",
+
+    "mdHeading":          "yellow",
+    "mdLink":             "lavendar",
+    "mdLinkUrl":          "dimWarm",
+    "mdCode":             "greenBright",
+    "mdCodeBlock":        "fg",
+    "mdCodeBlockBorder":  "darkRed",
+    "mdQuote":            "dimWarm",
+    "mdQuoteBorder":      "lavendar",
+    "mdHr":               "pink",
+    "mdListBullet":       "pink",
+
+    "toolDiffAdded":      "greenBright",
+    "toolDiffRemoved":    "lightRed",
+    "toolDiffContext":    "warmGray",
+
+    "syntaxComment":      "greenBright",
+    "syntaxKeyword":      "pink",
+    "syntaxFunction":     "yellow",
+    "syntaxVariable":     "pink",
+    "syntaxString":       "lavendar",
+    "syntaxNumber":       "lightRed",
+    "syntaxType":         "darkRed",
+    "syntaxOperator":     "fg",
+    "syntaxPunctuation":  "warmGray",
+
+    "thinkingOff":        "darkWarm",
+    "thinkingMinimal":    "dimWarm",
+    "thinkingLow":        "darkRed",
+    "thinkingMedium":     "lightRed",
+    "thinkingHigh":       "lavendar",
+    "thinkingXhigh":      "yellow",
+
+    "bashMode":           "greenBright"
+  },
+  "export": {
+    "pageBg":  "#1A1313",
+    "cardBg":  "#231919",
+    "infoBg":  "#3A2820"
+  }
+}

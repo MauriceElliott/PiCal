@@ -1,0 +1,6 @@
+# Auth & session data
+auth.json
+sessions/
+bin/
+auth*.json
+models-store.json
