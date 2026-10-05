@@ -1,6 +1,6 @@
 {
   "theme": "guinness",
-  "lastChangelogVersion": "0.87.1",
+  "lastChangelogVersion": "1.0.1",
   "defaultProvider": "github-copilot",
   "defaultModel": "mai-code-1.1-flash",
   "defaultThinkingLevel": "medium",
