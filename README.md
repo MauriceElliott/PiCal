@@ -4,7 +4,9 @@ PiCal is an Pi configuration designed to stop your skills atrophying while still
 
 ## Installation
 Simply install pi coding agent through your preferred method, [see the website for further instructions](https://pi.dev/)
+
 Once installed, before starting it up, create a .pi folder in home directory, then clone this repo into.
+
 That's it!
 
 ## Recommended Tools
