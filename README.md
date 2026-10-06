@@ -2,10 +2,10 @@
 
 PiCal is a Pi configuration designed to stop your skills atrophying while still offering you the following benefits:
 - An on the job tutor
-- Rubber duck
+- A Rubber duck
 - A quick reference
-- A bugfix web searcher
-- A researcher
+- A stack overflow and github issues crawler
+- A incompetent researcher
 - A Let me Google That for You-er
 
 It is designed with 1 simple goal, help your thinking instead of doing it for you. The cal in PiCal is from Cal Newport, the writer of DeepWork, and Digital Minimalism, both of which implore readers take head space, think for themselves, and to not become another money bag for the attention economy.
