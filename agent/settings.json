@@ -1,8 +1,8 @@
 {
   "theme": "guinness",
   "lastChangelogVersion": "1.0.1",
-  "defaultProvider": "github-copilot",
-  "defaultModel": "mai-code-1.1-flash",
+  "defaultProvider": "deepseek",
+  "defaultModel": "deepseek-v4-pro",
   "defaultThinkingLevel": "medium",
   "enableInstallTelemetry": false
 }
