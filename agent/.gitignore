@@ -4,3 +4,5 @@ sessions/
 bin/
 auth*.json
 models-store.json
+.DS_Store
+install/*

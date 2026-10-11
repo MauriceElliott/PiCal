@@ -1,8 +1,8 @@
 {
   "theme": "guinness",
-  "lastChangelogVersion": "1.0.1",
+  "lastChangelogVersion": "1.1.0",
   "defaultProvider": "deepseek",
-  "defaultModel": "deepseek-v4-pro",
+  "defaultModel": "deepseek-flash",
   "defaultThinkingLevel": "medium",
   "enableInstallTelemetry": false
 }
