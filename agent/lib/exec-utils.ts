@@ -7,50 +7,7 @@
 
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-export interface ExecResult {
-  code: number;
-  stdout: string;
-  stderr: string;
-}
-
-export interface ExecOptions {
-  timeout?: number;
-}
-
 // ─── Command Execution ────────────────────────────────────────────────────────
-
-/**
- * Execute a command with timeout and error handling.
- * @param pi - ExtensionAPI instance (for pi.exec)
- * @param command - Command name
- * @param args - Command arguments
- * @param options - Execution options (timeout in ms)
- * @returns Result with code, stdout, stderr
- */
-export async function execCommand(
-  pi: ExtensionAPI,
-  command: string,
-  args: string[] = [],
-  options: ExecOptions = {}
-): Promise<ExecResult> {
-  const timeout = options.timeout ?? 5000;
-  try {
-    const result = await pi.exec(command, args, { timeout });
-    return {
-      code: result.code,
-      stdout: result.stdout,
-      stderr: result.stderr,
-    };
-  } catch (error) {
-    return {
-      code: -1,
-      stdout: "",
-      stderr: String(error),
-    };
-  }
-}
 
 /**
  * Execute a git command and return trimmed stdout.
@@ -104,28 +61,5 @@ export async function execGh(
     return result.stdout.trim();
   } catch (error) {
     throw new Error(`gh execution failed: ${error}`);
-  }
-}
-
-/**
- * Try executing a command, returning null if it fails (no throw).
- * Useful for optional external tools.
- * @param pi - ExtensionAPI instance
- * @param command - Command name
- * @param args - Command arguments
- * @param options - Execution options
- * @returns Trimmed stdout, or null if failed
- */
-export async function tryExec(
-  pi: ExtensionAPI,
-  command: string,
-  args: string[] = [],
-  options: ExecOptions = {}
-): Promise<string | null> {
-  try {
-    const result = await execCommand(pi, command, args, options);
-    return result.code === 0 ? result.stdout.trim() : null;
-  } catch {
-    return null;
   }
 }

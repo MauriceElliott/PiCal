@@ -5,7 +5,7 @@
  * while accounting for ANSI color codes and theme colors.
  */
 
-import type { Theme, ThemeColor } from "@mariozechner/pi-coding-agent";
+import type { ThemeColor } from "@mariozechner/pi-coding-agent";
 import { truncateToWidth as piTruncate, visibleWidth } from "@mariozechner/pi-tui";
 
 // ─── ANSI Processing ──────────────────────────────────────────────────────────
@@ -24,16 +24,6 @@ export function stripAnsi(s: string): string {
 }
 
 /**
- * Measure the visible width of a string (accounting for ANSI codes).
- * Uses pi-tui's visibleWidth under the hood.
- * @param s - String to measure
- * @returns Visible character width
- */
-export function getVisibleWidth(s: string): number {
-  return visibleWidth(s);
-}
-
-/**
  * Truncate text to a maximum visible width, accounting for ANSI codes.
  * Uses pi-tui's truncateToWidth under the hood.
  * @param s - String to truncate
@@ -42,57 +32,6 @@ export function getVisibleWidth(s: string): number {
  */
 export function truncateToVisibleWidth(s: string, width: number): string {
   return piTruncate(s, width);
-}
-
-// ─── Theme-Aware Styling ──────────────────────────────────────────────────────
-
-/**
- * Colorize text using a theme color.
- * @param text - Text to colorize
- * @param colorKey - Theme color key
- * @param theme - Theme object
- * @returns Styled text (theme.fg applied)
- */
-export function colorizeText(
-  text: string,
-  colorKey: ThemeColor,
-  theme: Theme
-): string {
-  return theme.fg(colorKey, text);
-}
-
-/**
- * Build a padded string using a theme, accounting for ANSI codes.
- * @param text - Text to pad
- * @param targetWidth - Target visible width
- * @param theme - Theme object (for padding character)
- * @returns Padded string
- */
-export function padToVisibleWidth(
-  text: string,
-  targetWidth: number,
-  _theme?: Theme
-): string {
-  const vis = visibleWidth(text);
-  const pad = Math.max(0, targetWidth - vis);
-  return text + " ".repeat(pad);
-}
-
-/**
- * Truncate styled text to fit within a visible width while preserving theme color.
- * @param text - Already-styled text (may contain ANSI codes)
- * @param width - Maximum visible width
- * @param theme - Theme object
- * @param colorKey - Color to reapply after truncation (if needed)
- * @returns Truncated, styled text
- */
-export function truncateStyledText(
-  text: string,
-  width: number,
-  _theme: Theme,
-  _colorKey?: ThemeColor
-): string {
-  return truncateToVisibleWidth(text, width);
 }
 
 // ─── Theme Color Mapping ──────────────────────────────────────────────────────
@@ -114,35 +53,7 @@ export function thinkingLevelToColor(level: string): ThemeColor {
   return map[level] ?? "dim";
 }
 
-/**
- * Get a theme color for a percentage/status value.
- * Typical gradient: green (>50%) → yellow (>25%) → red (else).
- * @param percent - Numeric percentage (0-100)
- * @returns Theme color key
- */
-export function percentToColor(percent: number): ThemeColor {
-  if (percent > 50) return "success";
-  if (percent > 25) return "warning";
-  return "error";
-}
-
-// ─── Multi-part Text Building ─────────────────────────────────────────────────
-
-/**
- * Join multiple styled text segments with separators, accounting for width.
- * Useful for building status lines with separators and alignment.
- * @param segments - Array of { text, width? } (width = visual width if pre-calculated)
- * @param separator - Separator string (already styled)
- * @returns Joined text
- */
-export function joinStyledSegments(
-  segments: Array<{ text: string; width?: number }>,
-  separator: string = " "
-): string {
-  return segments
-    .map((seg) => seg.text)
-    .join(separator);
-}
+// ─── Layout ───────────────────────────────────────────────────────────────────
 
 /**
  * Left-align and right-align text within a fixed visible width.

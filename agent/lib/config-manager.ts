@@ -1,12 +1,11 @@
 /**
  * Config Manager - JSON file utilities
  *
- * Provides utilities for reading, writing, and watching JSON config files
+ * Provides utilities for reading and watching JSON config files
  * with built-in error handling and debouncing.
  */
 
-import { existsSync, readFileSync, writeFileSync, watch as fsWatch } from "fs";
-import { dirname } from "path";
+import { readFileSync, watch as fsWatch } from "fs";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -28,26 +27,6 @@ export function readJsonConfig<T>(path: string, fallback: T): T {
   } catch {
     return fallback;
   }
-}
-
-/**
- * Write a JSON config file with pretty formatting.
- * @param path - File path
- * @param data - Object to write
- * @throws Error if write fails
- */
-export function writeJsonConfig(path: string, data: unknown): void {
-  const dir = dirname(path);
-  // Ensure parent directory exists (basic, can be enhanced)
-  try {
-    if (dir !== "." && !existsSync(dir)) {
-      // This is a simplified approach; in practice you'd use `fs.mkdirSync(dir, { recursive: true })`
-      // but we're avoiding extra dependencies
-    }
-  } catch {
-    // Ignore directory creation errors
-  }
-  writeFileSync(path, JSON.stringify(data, null, 2) + "\n");
 }
 
 /**
@@ -80,25 +59,6 @@ export function watchJsonConfig<T>(
     if (debounceTimer) clearTimeout(debounceTimer);
     watcher.close();
   };
-}
-
-// ─── YAML Parsing ─────────────────────────────────────────────────────────────
-
-/**
- * Parse top-level hostname keys from a gh-style hosts.yml.
- * Top-level keys have no leading whitespace, end with ":", and look like
- * a hostname (contain at least one dot with a valid TLD-ish segment).
- * @param yaml - Raw YAML text
- * @returns Array of hostnames
- */
-export function parseGhHosts(yaml: string): string[] {
-  return yaml
-    .split("\n")
-    .filter(
-      (line) =>
-        /^[a-zA-Z0-9][a-zA-Z0-9._-]*\.[a-zA-Z]{2,}:\s*$/.test(line)
-    )
-    .map((line) => line.trim().slice(0, -1));
 }
 
 // ─── Path & Date Utilities ────────────────────────────────────────────────────
