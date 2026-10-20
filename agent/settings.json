@@ -4,11 +4,11 @@
   "defaultProvider": "deepseek",
   "defaultModel": "deepseek-flash",
   "defaultThinkingLevel": "medium",
-  "enableInstallTelemetry": false
- "terminal": {
+  "enableInstallTelemetry": false,
+  "terminal": {
     "showTerminalProgress": true
   },
-  "hideThinkingBlock": true,
   "collapseChangelog": false,
+  "hideThinkingBlock": true,
   "quietStartup": true
 }
