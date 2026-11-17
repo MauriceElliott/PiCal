@@ -3,6 +3,31 @@
 Handoff notes for the mode/profile rework of this pi configuration.
 No commits have been made. Everything below is working-tree only.
 
+## Update, 2026-11-17 (later): supersedes parts of the notes below
+
+- **PiOtrek is not a top-level mode.** Removed from `MODES`, `/mode` and the
+  popup. `agent/modes/piotrek.md` is now design notes only. Top-level modes:
+  PiCal, PiTor, PiVez.
+- **`/mode X` starts a new session** (context cleared). This replaces the
+  "state per branch, mode switch keeps conversation" behaviour in decision 6 and
+  the `/mode` rows under "Verified behaviour". `/pina` is unchanged.
+- **`SYSTEM.md` is invariants only again**: persona moved to `modes/pical.md`;
+  base git rule is "commit and stage only on `agent/_ag__br_<name>`".
+- **Gate is branch-aware** (P4 below is superseded). `add`/`commit` allowed on
+  `agent/_ag__br_*`; `push`, `merge`, `cherry-pick`, `revert`, `rebase`, `pull`
+  always gated. See `agent/modes/pitor-requirements.md`, 7.27, for rules, tests,
+  and known gaps.
+- **The gate is mode-aware**: in PiCal, `git add`/`git commit` are refused with no
+  dialog on every branch. **The popup shows after every `/mode` switch**, before
+  the PiNa question when entering PiCal.
+- **Open finding:** the mode status entry is not visible, because
+  `terminal-prompt.ts` blanks the default footer and its own status line has no
+  mode. `agent/modes/pitor.md` is stale against the plan.
+- README rewritten (original text kept where still true).
+- Requirements and decisions for PiTor, PiTan, PiLing live in
+  `agent/modes/pitor-requirements.md` (long, layered by round; 7.15 and 7.27 are
+  the current summaries).
+
 ## Where it stands
 
 Phases 0, 1, 2, 3 and 5 of the agreed plan are done and verified against a

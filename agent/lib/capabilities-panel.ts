@@ -17,7 +17,7 @@ import { type Focusable, visibleWidth, wrapTextWithAnsi } from "@mariozechner/pi
 import { MODES, type ModeState } from "./modes-registry";
 
 const COMMANDS: readonly (readonly [string, string])[] = [
-  ["/mode [pical|pitor|piotrek|pivez]", "switch mode"],
+  ["/mode [pical|pitor|pivez]", "switch mode (starts a new session)"],
   ["/pina [on|off]", "toggle the Socratic overlay"],
   ["/new", "fresh context, defaults restored"],
 ];

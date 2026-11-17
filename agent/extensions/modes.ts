@@ -43,6 +43,14 @@ const STATE_KEY = "modes";
 
 let state: ModeState = { ...DEFAULT_STATE };
 
+/**
+ * Set by /mode just before it starts a new session, read once by the next
+ * session_start. Module state survives ctx.newSession (the factory runs again
+ * but the module is not reloaded), so this tells a mode switch apart from a
+ * plain /new, which does not show the overview.
+ */
+let overviewOnNext = false;
+
 const promptCache = new Map<string, string>();
 
 /** Markdown body for a file in agent/modes, empty string if it is missing. */
@@ -109,6 +117,8 @@ async function showCapabilities(ctx: ExtensionContext): Promise<void> {
 
 export default function (pi: ExtensionAPI) {
   pi.on("session_start", async (event, ctx) => {
+    const afterModeSwitch = overviewOnNext;
+    overviewOnNext = false;
     restore(ctx);
     applyTools(pi);
     refreshStatus(ctx);
@@ -116,8 +126,10 @@ export default function (pi: ExtensionAPI) {
     if (!ctx.hasUI) return;
     if (event.reason !== "startup" && event.reason !== "new") return;
 
-    // 1. Overview, on the first screen of a process.
-    if (event.reason === "startup") await showCapabilities(ctx);
+    // 1. Overview: on the first screen of a process, and after a mode switch.
+    if (event.reason === "startup" || (event.reason === "new" && afterModeSwitch)) {
+      await showCapabilities(ctx);
+    }
 
     // 2. The PiNa question, once per branch, PiCal only.
     if (state.mode !== "pical" || hasDecision(ctx)) return;
@@ -158,7 +170,7 @@ export default function (pi: ExtensionAPI) {
   });
 
   pi.registerCommand("mode", {
-    description: "Switch mode: pical | pitor | piotrek | pivez. No argument lists modes.",
+    description: "Switch mode (starts a new session): pical | pitor | pivez. No argument lists modes.",
     handler: async (args, ctx) => {
       const want = args.trim().toLowerCase();
 
@@ -184,12 +196,33 @@ export default function (pi: ExtensionAPI) {
         return;
       }
 
-      state = { ...state, mode: want };
-      applyTools(pi);
-      persist(pi);
-      refreshStatus(ctx);
-      const note = modeDef(state.mode).status === "not-implemented" ? " — not implemented" : "";
-      ctx.ui.notify(`Mode: ${modeDef(state.mode).label}${note}`, "info");
+      // A mode switch clears context: it starts a new session in the target
+      // mode. The handler's own ctx is stale once the session is replaced, so
+      // anything after the switch goes through the replacement context.
+      //
+      // PiTor and PiVez get their mode written into the new session before it
+      // starts. PiCal gets no entry, exactly like /new, so the new session
+      // asks the PiNa question again: that is how PiNa is turned on or off if
+      // it was chosen wrongly at launch. The capabilities overview is shown
+      // first in every case.
+      const def = modeDef(want);
+      const note = def.status === "not-implemented" ? " — not implemented" : "";
+      overviewOnNext = true;
+      const result = await ctx.newSession({
+        setup:
+          want === "pical"
+            ? undefined
+            : async (sm) => {
+                sm.appendCustomEntry(STATE_KEY, { mode: want, pina: false });
+              },
+        withSession: async (rctx) => {
+          rctx.ui.notify(`Mode: ${def.label}${note}. New session, previous context not carried over.`, "info");
+        },
+      });
+      if (result.cancelled) {
+        overviewOnNext = false;
+        ctx.ui.notify("Mode switch cancelled.", "info");
+      }
     },
   });
 

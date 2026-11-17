@@ -7,9 +7,14 @@
  *
  * Adding a mode here is the only place a mode needs to be declared. The prompt
  * body still lives in agent/modes/<file>.
+ *
+ * Top-level modes are PiCal, PiTor and PiVez. PiNa is an overlay to PiCal.
+ * PiTan and PiLing are overlays to PiTor, spawn-only reviewer sessions, not
+ * modes. PiOtrek is a layer above PiTor, not a mode, and is not implemented
+ * (see agent/modes/piotrek.md). None of those three is declared here.
  */
 
-export type ModeId = "pical" | "pitor" | "piotrek" | "pivez";
+export type ModeId = "pical" | "pitor" | "pivez";
 
 export interface ModeDef {
   id: ModeId;
@@ -51,19 +56,6 @@ export const MODES: readonly ModeDef[] = [
       "phases — plan, design, implement, validate, adversarial review",
       "iterate — failures return to validation until it passes",
       "report — changes plus decisions and areas of lower certainty",
-    ],
-  },
-  {
-    id: "piotrek",
-    label: "PiOtrek",
-    file: "piotrek.md",
-    readOnly: false,
-    status: "not-implemented",
-    summary: "Long-running system design over PiTor workers.",
-    capabilities: [
-      "board — stories broken into features",
-      "orchestration — heavyweight planning model over worker agents",
-      "reporting — sureness and complexity per worker result",
     ],
   },
   {
