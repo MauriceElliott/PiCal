@@ -84,7 +84,9 @@ detected: git aliases, scripts that call git internally, `GIT_*` config tricks.
 Tested with 34 command cases (0 failures) through a stub; the dialog itself was
 not rendered.
 
-**P6 — reporting spike**, doc only, no code:
+**P6 — reporting spike**, doc only, no code. STATUS: analysis written to
+`agent/modes/piotrek-reporting.md` (features F1-F13, failure modes, open questions);
+schema NOT written, waiting on operator answers to its section 5. Original plan:
 `agent/modes/piotrek-reporting.md` plus `agent/modes/report.schema.json`
 (JSON Schema 2020-12). Shape agreed so far:
 
