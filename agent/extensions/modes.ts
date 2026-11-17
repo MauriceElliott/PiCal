@@ -54,6 +54,13 @@ let state: ModeState = { ...DEFAULT_STATE };
  */
 let overviewOnNext = false;
 
+/**
+ * Model and thinking level of the session /mode is leaving, re-applied by the
+ * next session_start. Without it the new session falls back to defaultModel
+ * from settings.json. Set and consumed like overviewOnNext.
+ */
+let carryOver: { provider: string; id: string; thinking: string } | undefined;
+
 const promptCache = new Map<string, string>();
 
 /** Markdown body for a file in agent/modes, empty string if it is missing. */
@@ -124,6 +131,16 @@ export default function (pi: ExtensionAPI) {
   pi.on("session_start", async (event, ctx) => {
     const afterModeSwitch = overviewOnNext;
     overviewOnNext = false;
+    const keep = carryOver;
+    carryOver = undefined;
+    if (keep && event.reason === "new") {
+      // Looked up in the new session's registry; setModel here does not
+      // touch settings.json. Before the PiTor intake, which reads ctx.model.
+      const model = ctx.modelRegistry.find(keep.provider, keep.id);
+      const ok = model ? await pi.setModel(model) : false;
+      if (ok) pi.setThinkingLevel(keep.thinking as ReturnType<typeof pi.getThinkingLevel>);
+      else if (ctx.hasUI) ctx.ui.notify(`Could not keep model ${keep.provider}/${keep.id}; using the default.`, "warning");
+    }
     restore(ctx);
     applyTools(pi);
     refreshStatus(ctx);
@@ -225,6 +242,9 @@ export default function (pi: ExtensionAPI) {
       const def = modeDef(want);
       const note = def.status === "not-implemented" ? " — not implemented" : "";
       overviewOnNext = true;
+      carryOver = ctx.model
+        ? { provider: ctx.model.provider, id: ctx.model.id, thinking: pi.getThinkingLevel() }
+        : undefined;
       const result = await ctx.newSession({
         setup:
           want === "pical"
@@ -238,6 +258,7 @@ export default function (pi: ExtensionAPI) {
       });
       if (result.cancelled) {
         overviewOnNext = false;
+        carryOver = undefined;
         ctx.ui.notify("Mode switch cancelled.", "info");
       }
     },

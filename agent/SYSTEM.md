@@ -14,3 +14,6 @@ decide the conduct.
   `git switch -c agent/_ag__br_<name>`. `git push`, `merge`, `cherry-pick`,
   `revert`, `rebase` and `pull` always need operator approval at the gate; never
   work around it.
+- To run git in another directory, chain with `&&`: `cd <dir> && ... && git commit`.
+  Never use `;` after `cd`. The gate cannot trust a `cd` joined by `;` and will
+  block the commit even when the branch is an agent branch.
