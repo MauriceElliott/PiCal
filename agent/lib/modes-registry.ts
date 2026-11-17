@@ -65,9 +65,10 @@ export const MODES: readonly ModeDef[] = [
     file: "pivez.md",
     readOnly: false,
     status: "ready",
-    summary: "Open ended. Operator and model, all tools, no mode rules.",
+    summary: "The way out of any mode. Base rules only, all tools.",
     capabilities: [
-      "open — no mode prompt, only the SYSTEM.md invariants",
+      "way out — not a mode of its own; leaves PiCal and PiTor behind",
+      "no mode rules — only the SYSTEM.md invariants apply",
       "all tools — write and edit available",
       "no overlay — PiNa does not apply",
     ],

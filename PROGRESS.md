@@ -24,6 +24,7 @@ No commits have been made. Everything below is working-tree only.
   visible before because that extension blanks the default footer).
   `agent/modes/pitor.md` is rewritten to the decided plan, still marked not
   implemented.
+- **PiVez is "the way out of any mode"**: `modes/pivez.md` says so (it was empty).
 - README rewritten (original text kept where still true).
 - Requirements and decisions for PiTor, PiTan, PiLing live in
   `agent/modes/pitor-requirements.md` (long, layered by round; 7.15 and 7.27 are

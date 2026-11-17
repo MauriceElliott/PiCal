@@ -1244,7 +1244,7 @@ Verification:
   under a live model.
 
 Costs and notes:
-- The popup is now 33 lines at 84 columns (it was 30) and does not scroll.
+- The popup is now 34 lines at 84 columns (it was 30) and does not scroll.
 - The PiTor prompt now states the operator touchpoints and the review cap to a
   model that cannot act on them yet; it is told not to simulate them.
 - `README.md` is updated: status-line sentence added, the two fixed limitations
@@ -1255,3 +1255,14 @@ Costs and notes:
 Nothing from this round. Items still undecided across the document are in 7.26's
 and 7.28's lists that were not answered: the PiVez identity line (7.27 gap 5),
 and the `PiOtrek` questions in 7.4 C10, which wait for PiOtrek.
+
+### 7.30 Operator decision, round thirteen
+
+**D47. PiVez is the way out of any mode.** `modes/pivez.md` now says so: not a
+working mode of its own, no mode rules, no overlay, base rules only, every tool
+available. It replaces the empty file, which resolves gap 5 in 7.27 (a PiVez
+session had no identity line). The popup summary and capabilities for PiVez and
+the README were updated to match. PiVez's prompt is now two sections (base plus
+this text), not the base alone.
+
+**D48. PiOtrek is left as it is** (design notes, not a mode, not implemented).

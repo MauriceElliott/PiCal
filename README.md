@@ -10,7 +10,7 @@ PiCal is a Pi configuration designed to stop your skills atrophying while still 
 
 It is designed with 1 simple goal, help your thinking instead of doing it for you. The cal in PiCal is from Cal Newport, the writer of DeepWork, and Digital Minimalism, both of which implore readers take head space, think for themselves, and to not become another money bag for the attention economy.
 
-That is the default behaviour. The configuration also has a mode for when you do want the work done (PiTor, specified but not yet built) and one for when you want no rules beyond the basics (PiVez). Switching between them is deliberate and clears the conversation.
+That is the default behaviour. The configuration also has a mode for when you do want the work done (PiTor, specified but not yet built) and a way out of the modes altogether (PiVez), where only the basics apply. Switching between them is deliberate and clears the conversation.
 
 ## Modes
 
@@ -18,7 +18,7 @@ That is the default behaviour. The configuration also has a mode for when you do
 |---|---|---|
 | **PiCal** | works | The default. Read and research. You write the code. |
 | **PiTor** | specified, not implemented | One feature, start to finish, with review. |
-| **PiVez** | works | Open ended. You and the model, all tools, no mode rules. |
+| **PiVez** | works | The way out of any mode. Base rules only, all tools. |
 
 `/mode` with no argument lists them. `/mode <name>` switches (see [Commands](#commands)).
 
@@ -70,7 +70,7 @@ Overlays to PiTor, not modes. They are spawned reviewer sessions: the base rules
 
 ### PiVez
 
-Open ended. No mode prompt, so the base rules below are all that apply, and every tool is available including `write` and `edit`. The git gate still applies.
+The way out of any mode. It is not a working mode of its own: it has no mode rules and no overlay, so the base rules below are all that apply, and every tool is available including `write` and `edit`. The git gate still applies. Use it to leave PiCal or PiTor behind; like any `/mode` switch it starts a new session.
 
 ### PiOtrek (not a mode, not implemented)
 
@@ -137,7 +137,7 @@ agent/
     pical.md                PiCal prompt
     pina.md                 PiNa overlay
     pitor.md                PiTor prompt: the decided plan, marked not implemented
-    pivez.md                empty on purpose
+    pivez.md                PiVez: the way out of any mode, no rules of its own
     piotrek.md              PiOtrek notes (not loaded)
     piotrek-reporting.md    analysis of PiOtrek worker reports (not loaded)
     pitor-requirements.md   the decided PiTor / PiTan / PiLing plan (not loaded)
@@ -156,5 +156,5 @@ PROGRESS.md                 working notes for this configuration
 
 - PiTor, PiTan, PiLing and PiOtrek do not exist yet. Everything under them above is a plan.
 - The mode, `/mode`, gate and status line behaviour was checked with scripted harnesses and a few probes of a real pi process. The approval dialog and the interactive popup have not been exercised end to end.
-- The capabilities popup is 33 lines tall at 84 columns and does not scroll, so it clips on a shorter terminal.
+- The capabilities popup is 34 lines tall at 84 columns and does not scroll, so it clips on a shorter terminal.
 - The reviewer spike used one model and one small diff; it shows the mechanism works, not how good the reviews are.
