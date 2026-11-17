@@ -34,8 +34,19 @@ export class CapabilitiesPanel implements Focusable {
     private done: () => void,
   ) {}
 
-  /** Any key dismisses. No accept, no cancel, no decision. */
-  handleInput(): void {
+  private readonly openedAt = Date.now();
+
+  /**
+   * Any key dismisses. No accept, no cancel, no decision.
+   *
+   * At launch the terminal is still delivering startup traffic (capability and
+   * colour query replies, buffered keystrokes) into the input stream. Those
+   * would dismiss the panel before it is ever drawn, so input is ignored for a
+   * short grace period, and terminal replies / key-release events are ignored.
+   */
+  handleInput(data?: string): void {
+    if (Date.now() - this.openedAt < 600) return;
+    if (data && (/^\x1b\[[?>=]/.test(data) || /^\x1b\][\s\S]*(\x07|\x1b\\)$/.test(data) || /:3[u~A-D]$/.test(data))) return;
     this.done();
   }
 
