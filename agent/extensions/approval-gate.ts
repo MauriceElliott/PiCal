@@ -1,14 +1,14 @@
 /**
  * Approval Gate Extension
  *
- * Intercepts mutating tool calls (write, edit, non-read-only bash) and
- * presents an approval dialog.
+ * Gates exactly three bash commands: `git add`, `git commit`, `git push`.
+ * Everything else (every other tool, every other bash command) passes through
+ * without a dialog. Mode-level restrictions live in extensions/modes.ts.
  *
- * edit / write  → compact right-anchored overlay: Accept | Cancel
- * bash          → full centre overlay: Yes | Yes, and... | No, and...
- *
- * Read-only tools (read, ls, grep, find) and read-only bash commands
- * pass through without prompting.
+ * Detection is token-based per command segment, so `git log --grep add` is
+ * not gated and `git -C repo commit -m x` is. Shell wrappers are looked
+ * through (env, sudo, xargs, `bash -c '...'`, ...). Aliases and scripts that
+ * call git internally are not detected.
  */
 
 import type { ExtensionAPI, Theme } from "@mariozechner/pi-coding-agent";
@@ -23,175 +23,59 @@ type ApprovalResult =
   | { action: "reject_instruct"; instruction: string }
   | { action: "cancel" };
 
-// ── Read-only classification ──────────────────────────────────────────────────
+// ── Git write detection ───────────────────────────────────────────────────────
 
-const SAFE_COMMANDS = new Set([
-  // File reading
-  "cat", "head", "tail", "less", "more", "bat", "tac",
-  // Listing / finding
-  "ls", "tree", "find", "locate", "fd", "cd",
-  // Search
-  "grep", "egrep", "fgrep", "rg", "ag", "ack",
-  // File info
-  "file", "stat", "wc", "du", "df", "md5sum", "sha256sum", "sha1sum",
-  // Text processing (stdout-only)
-  "sort", "uniq", "cut", "tr", "awk", "sed", "jq", "yq", "column", "fmt", "fold", "nl", "rev",
-  // Path utilities
-  "which", "whereis", "type", "command", "realpath", "readlink", "basename", "dirname",
-  // System info
-  "echo", "printf", "pwd", "date", "cal", "whoami", "id", "hostname", "uname", "uptime",
-  "env", "printenv", "ps", "free", "lsof",
-  // Comparison
-  "diff", "cmp", "comm",
-  // Test
-  "test", "[", "[[", "true", "false",
-  // Network (read)
-  "dig", "host", "nslookup", "ping",
-]);
+const GATED_GIT = new Set(["add", "commit", "push"]);
+/** Git global options that consume the following token. */
+const GIT_OPTS_WITH_ARG = new Set(["-C", "-c", "--git-dir", "--work-tree", "--namespace", "--exec-path"]);
+const WRAPPERS = new Set(["env", "sudo", "command", "exec", "time", "nice", "nohup", "xargs", "doas", "builtin"]);
+const SHELLS = new Set(["sh", "bash", "zsh", "dash", "ksh"]);
 
-const SAFE_GIT_SUBCOMMANDS = new Set([
-  "status", "log", "diff", "show", "branch", "tag", "remote",
-  "describe", "rev-parse", "ls-files", "blame", "shortlog", "reflog",
-]);
+const unquote = (t: string) => t.replace(/^['"`(]+|['"`);]+$/g, "");
+const base = (t: string) => unquote(t).split("/").pop() ?? "";
 
-function firstWord(segment: string): string {
-  const parts = segment.split(/\s+/);
-  for (const p of parts) {
-    if (p.includes("=") && !p.startsWith("-")) continue; // skip FOO=bar
-    return p.split("/").pop() || p; // handle /usr/bin/cat → cat
+/** The git subcommand if these tokens invoke git, else undefined. */
+function gitSubcommand(tokens: string[]): string | undefined {
+  let i = 0;
+  while (i < tokens.length) {
+    const t = unquote(tokens[i]!);
+    if (/^[A-Za-z_][A-Za-z0-9_]*=/.test(t) || WRAPPERS.has(base(t)) || (t.startsWith("-") && i > 0)) i++;
+    else break;
   }
-  return parts[0]?.split("/").pop() || "";
+  if (base(tokens[i] ?? "") !== "git") return undefined;
+  for (i++; i < tokens.length; i++) {
+    const t = unquote(tokens[i]!);
+    if (GIT_OPTS_WITH_ARG.has(t)) {
+      i++;
+      continue;
+    }
+    if (t.startsWith("-")) continue; // --no-pager, --git-dir=x, -P ...
+    return t;
+  }
+  return undefined;
 }
 
-function secondWord(segment: string): string | undefined {
-  const parts = segment.split(/\s+/).filter((p) => !p.includes("=") || p.startsWith("-"));
-  return parts[1];
-}
-
-function isReadOnlyBash(command: string): boolean {
-  // Any file redirect → mutating
-  if (command.includes(">")) return false;
-  // sed -i → mutating
-  if (/\bsed\b.*\s-i\b/.test(command)) return false;
-
+export function isGatedGit(command: string): boolean {
   const segments = command
-    .split(/\s*(?:&&|\|\||[;\n|])\s*/)
+    .split(/&&|\|\||[;\n|&]|\$\(|`/)
     .map((s) => s.trim())
     .filter(Boolean);
 
   for (const seg of segments) {
-    const cmd = firstWord(seg);
-    if (!cmd) continue;
+    const tokens = seg.split(/\s+/);
+    // Direct invocation.
+    const direct = gitSubcommand(tokens);
+    if (direct && GATED_GIT.has(direct)) return true;
 
-    if (cmd === "git") {
-      const sub = secondWord(seg);
-      if (!sub || !SAFE_GIT_SUBCOMMANDS.has(sub)) return false;
-      continue;
+    // `bash -c "git commit ..."`: re-scan what follows -c.
+    const first = tokens.findIndex((t) => SHELLS.has(base(t)));
+    const c = tokens.indexOf("-c", first + 1);
+    if (first >= 0 && c > first) {
+      const inner = tokens.slice(c + 1).join(" ");
+      if (isGatedGit(unquote(inner))) return true;
     }
-
-    if (!SAFE_COMMANDS.has(cmd)) return false;
   }
-
-  return true;
-}
-
-// ── Simple approval dialog (edit / write) ───────────────────────────────────
-
-const SIMPLE_OPTIONS = ["Accept", "Cancel"] as const;
-
-class SimpleApprovalDialog implements Focusable {
-  focused = false;
-
-  private selected = 0;
-  private description: string;
-  private theme: Theme;
-  private done: (r: ApprovalResult) => void;
-  private cachedWidth?: number;
-  private cachedLines?: string[];
-
-  constructor(theme: Theme, description: string, done: (r: ApprovalResult) => void) {
-    this.theme = theme;
-    this.description = description;
-    this.done = done;
-  }
-
-  handleInput(data: string): void {
-    if (matchesKey(data, "up") && this.selected > 0) {
-      this.selected--;
-    } else if (matchesKey(data, "down") && this.selected < 1) {
-      this.selected++;
-    } else if (matchesKey(data, "return")) {
-      this.done(this.selected === 0 ? { action: "approve" } : { action: "cancel" });
-      return;
-    } else if (matchesKey(data, "escape")) {
-      this.done({ action: "cancel" });
-      return;
-    } else {
-      return;
-    }
-    this.invalidate();
-  }
-
-  render(width: number): string[] {
-    if (this.cachedLines && this.cachedWidth === width) return this.cachedLines;
-
-    const t = this.theme;
-    const innerW = width - 2;
-    const lines: string[] = [];
-
-    const pad = (s: string, len: number) => {
-      const vis = visibleWidth(s);
-      return s + " ".repeat(Math.max(0, len - vis));
-    };
-    const row = (content: string) => t.fg("border", "│") + pad(content, innerW) + t.fg("border", "│");
-
-    // Top border
-    const title = " Approval ";
-    const borderLeft = Math.max(0, Math.floor((innerW - title.length) / 2));
-    const borderRight = Math.max(0, innerW - borderLeft - title.length);
-    lines.push(
-      t.fg("border", "╭") +
-        t.fg("border", "─".repeat(borderLeft)) +
-        t.fg("accent", title) +
-        t.fg("border", "─".repeat(borderRight)) +
-        t.fg("border", "╮"),
-    );
-
-    // Description
-    const descTruncated =
-      this.description.length > innerW - 4
-        ? this.description.slice(0, innerW - 7) + "..."
-        : this.description;
-    lines.push(row(""));
-    lines.push(row("  " + t.fg("toolTitle", descTruncated)));
-    lines.push(row(""));
-
-    // Options
-    for (let i = 0; i < SIMPLE_OPTIONS.length; i++) {
-      const isSel = i === this.selected;
-      const prefix = isSel ? t.fg("accent", "  ▶ ") : "    ";
-      const label = isSel ? t.fg("accent", SIMPLE_OPTIONS[i]) : t.fg("text", SIMPLE_OPTIONS[i]);
-      lines.push(row(prefix + label));
-    }
-
-    // Help
-    lines.push(row(""));
-    lines.push(row("  " + t.fg("dim", "↑↓ navigate  •  enter  •  esc cancel")));
-
-    // Bottom border
-    lines.push(t.fg("border", "╰" + "─".repeat(innerW) + "╯"));
-
-    this.cachedWidth = width;
-    this.cachedLines = lines;
-    return lines;
-  }
-
-  invalidate(): void {
-    this.cachedWidth = undefined;
-    this.cachedLines = undefined;
-  }
-
-  dispose(): void {}
+  return false;
 }
 
 // ── Tool call description ─────────────────────────────────────────────────────
@@ -374,68 +258,20 @@ class ApprovalDialog implements Focusable {
   }
 }
 
-// ── System prompt snippet ─────────────────────────────────────────────────────
-
-const GATE_PROMPT = `
-## Approval Gate (Active)
-
-Mutating tool calls (write, edit, non-read-only bash) require user approval before execution.
-The approval gate handles confirmation automatically — do not ask "should I proceed?" in your
-messages. Just make the tool call and the user will approve, reject, or redirect via the gate.
-
-If a tool call is rejected with instructions, follow the user's alternative direction.
-If a tool call is approved with additional instructions, execute the tool and then follow those
-instructions afterward.
-`.trim();
-
 // ── Extension ─────────────────────────────────────────────────────────────────
 
 export default function (pi: ExtensionAPI) {
-  // ── Gate mutating tool calls ──
-
   pi.on("tool_call", async (event, ctx) => {
-    // Always allow read-only tools
-    if (["read", "ls", "grep", "find"].includes(event.toolName)) return undefined;
-
-    // Allow read-only bash
-    if (event.toolName === "bash") {
-      const cmd = (event.input as { command?: string }).command ?? "";
-      if (isReadOnlyBash(cmd)) return undefined;
-    }
+    if (event.toolName !== "bash") return undefined;
+    const cmd = (event.input as { command?: string }).command ?? "";
+    if (!isGatedGit(cmd)) return undefined;
 
     // Non-interactive mode: block by default
     if (!ctx.hasUI) {
-      return { block: true, reason: "Mutating tool call blocked (no UI for approval)" };
+      return { block: true, reason: "git add/commit/push blocked (no UI for approval)" };
     }
 
-    // Build description
     const desc = describeToolCall(event.toolName, event.input as Record<string, unknown>);
-
-    // edit / write → compact right-anchored dialog
-    if (event.toolName === "edit" || event.toolName === "write") {
-      const result = await ctx.ui.custom<ApprovalResult>(
-        (_tui, theme, _kb, done) => {
-          const dialog = new SimpleApprovalDialog(theme, desc, done);
-          dialog.focused = true;
-          return dialog;
-        },
-        {
-          overlay: true,
-          overlayOptions: () => ({
-            anchor: "bottom-right",
-            width: 42,
-            margin: 2,
-          }),
-        },
-      );
-
-      if (!result || result.action === "cancel") {
-        return { block: true, reason: "Blocked by user" };
-      }
-      return undefined;
-    }
-
-    // bash (and any other mutating tools) → full centre dialog
     const result = await ctx.ui.custom<ApprovalResult>(
       (_tui, theme, _kb, done) => {
         const dialog = new ApprovalDialog(theme, desc, done);
@@ -448,27 +284,13 @@ export default function (pi: ExtensionAPI) {
     if (!result || result.action === "cancel") {
       return { block: true, reason: "Blocked by user" };
     }
-
-    if (result.action === "approve") {
-      return undefined;
-    }
-
     if (result.action === "approve_instruct") {
       pi.sendUserMessage(result.instruction, { deliverAs: "steer" });
-      return undefined;
     }
-
     if (result.action === "reject_instruct") {
       pi.sendUserMessage(result.instruction, { deliverAs: "steer" });
       return { block: true, reason: "Rejected by user" };
     }
-
     return undefined;
-  });
-
-  // ── Inject gate instructions into system prompt ──
-
-  pi.on("before_agent_start", async (event, _ctx) => {
-    return { systemPrompt: event.systemPrompt + "\n\n" + GATE_PROMPT };
   });
 }

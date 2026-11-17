@@ -75,10 +75,14 @@ Driven through a stub `pi`/`ctx` with jiti (recipe below).
 
 ## Outstanding
 
-**P4 — delete `agent/extensions/approval-gate.ts`.** Nothing to port; PiCal's
-read-only enforcement lives in `modes.ts`. Until this happens a PiCal
-`write`/`edit` call gets a dialog before being rejected, which is just noise.
-Note the consequence, once: with the gate gone, "never commit" is prompt-only.
+**P4 — DONE, changed scope: the gate is kept, not deleted.**
+`agent/extensions/approval-gate.ts` now gates only bash `git add`, `git commit`,
+`git push` (token-based, sees through `git -C`, env/sudo/xargs wrappers and
+`bash -c '...'`). All other tools and commands pass without a dialog. The gate
+no longer injects prompt text; `modes.ts` stays the sole prompt author. Not
+detected: git aliases, scripts that call git internally, `GIT_*` config tricks.
+Tested with 34 command cases (0 failures) through a stub; the dialog itself was
+not rendered.
 
 **P6 — reporting spike**, doc only, no code:
 `agent/modes/piotrek-reporting.md` plus `agent/modes/report.schema.json`
