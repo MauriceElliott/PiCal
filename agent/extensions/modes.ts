@@ -26,6 +26,7 @@ import { join } from "node:path";
 import {
   DEFAULT_STATE,
   isModeId,
+  type ModeId,
   MODES,
   modeDef,
   type ModeState,
@@ -111,10 +112,10 @@ function hasDecision(ctx: ExtensionContext): boolean {
     .some((entry) => entry.type === "custom" && entry.customType === STATE_KEY);
 }
 
-async function showCapabilities(ctx: ExtensionContext): Promise<void> {
-  await ctx.ui.custom<void>(
+async function showCapabilities(ctx: ExtensionContext): Promise<ModeId> {
+  return ctx.ui.custom<ModeId>(
     (_tui, theme, _kb, done) => {
-      const panel = new CapabilitiesPanel(theme, state, () => done(undefined));
+      const panel = new CapabilitiesPanel(theme, state, done);
       panel.focused = true;
       return panel;
     },
@@ -148,9 +149,19 @@ export default function (pi: ExtensionAPI) {
     if (!ctx.hasUI) return;
     if (event.reason !== "startup" && event.reason !== "new") return;
 
-    // 1. Overview: on the first screen of a process, and after a mode switch.
+    // 1. Overview and mode choice: on the first screen of a process, and after
+    // a mode switch. Choosing PiCal writes no entry, so the PiNa question below
+    // still runs; PiTor and PiVez record the choice.
+    let chose = false;
     if (event.reason === "startup" || (event.reason === "new" && afterModeSwitch)) {
-      await showCapabilities(ctx);
+      const picked = await showCapabilities(ctx);
+      if (picked !== state.mode) {
+        state = { mode: picked, pina: false };
+        chose = true;
+        if (picked !== "pical") persist(pi);
+        applyTools(pi);
+        refreshStatus(ctx);
+      }
     }
 
     // 2. PiTor: intake, once per session, after the overview.
@@ -160,7 +171,7 @@ export default function (pi: ExtensionAPI) {
     }
 
     // 3. The PiNa question, once per branch, PiCal only.
-    if (state.mode !== "pical" || hasDecision(ctx)) return;
+    if (state.mode !== "pical" || (hasDecision(ctx) && !chose)) return;
 
     const enable = await ctx.ui.confirm(
       "PiNa",

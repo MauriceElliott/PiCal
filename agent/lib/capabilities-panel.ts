@@ -2,7 +2,7 @@
  * Capabilities panel
  *
  * Startup overview: what the configured modes can do, and the commands that
- * change them. Informational only — not a gate, not a menu. Any key dismisses.
+ * change them. Up/down picks the mode, Enter accepts it.
  *
  * Component, not an extension: extensions/modes.ts owns the startup sequence
  * (panel, then the PiNa question) so the order cannot depend on extension load
@@ -13,8 +13,8 @@
  */
 
 import type { Theme } from "@earendil-works/pi-coding-agent";
-import { type Focusable, visibleWidth, wrapTextWithAnsi } from "@mariozechner/pi-tui";
-import { MODES, type ModeState } from "./modes-registry";
+import { type Focusable, matchesKey, visibleWidth, wrapTextWithAnsi } from "@mariozechner/pi-tui";
+import { MODES, type ModeId, type ModeState } from "./modes-registry";
 
 const COMMANDS: readonly (readonly [string, string])[] = [
   ["/mode [pical|pitor|pivez]", "switch mode (starts a new session)"],
@@ -31,13 +31,17 @@ export class CapabilitiesPanel implements Focusable {
   constructor(
     private theme: Theme,
     private state: ModeState,
-    private done: () => void,
-  ) {}
+    private done: (chosen: ModeId) => void,
+  ) {
+    this.selected = Math.max(0, MODES.findIndex((m) => m.id === state.mode));
+  }
+
+  private selected: number;
 
   private readonly openedAt = Date.now();
 
   /**
-   * Any key dismisses. No accept, no cancel, no decision.
+   * Up/down moves the selection, Enter accepts it. Nothing else does anything.
    *
    * At launch the terminal is still delivering startup traffic (capability and
    * colour query replies, buffered keystrokes) into the input stream. Those
@@ -47,7 +51,11 @@ export class CapabilitiesPanel implements Focusable {
   handleInput(data?: string): void {
     if (Date.now() - this.openedAt < 600) return;
     if (data && (/^\x1b\[[?>=]/.test(data) || /^\x1b\][\s\S]*(\x07|\x1b\\)$/.test(data) || /:3[u~A-D]$/.test(data))) return;
-    this.done();
+    if (matchesKey(data ?? "", "up")) this.selected = (this.selected + MODES.length - 1) % MODES.length;
+    else if (matchesKey(data ?? "", "down")) this.selected = (this.selected + 1) % MODES.length;
+    else if (matchesKey(data ?? "", "enter")) this.done(MODES[this.selected].id);
+    else return;
+    this.invalidate();
   }
 
   render(width: number): string[] {
@@ -70,11 +78,13 @@ export class CapabilitiesPanel implements Focusable {
 
     for (const m of MODES) {
       const active = m.id === this.state.mode;
+      const picked = m.id === MODES[this.selected].id;
       let tag = "";
       if (m.status === "not-implemented") tag = "  ·  not implemented";
       else if (active) tag = this.state.pina ? "  ·  active + PiNa" : "  ·  active";
 
-      lines.push(row("  " + t.fg(active ? "accent" : "text", m.label) + t.fg("dim", tag)));
+      const marker = picked ? "▸ " : "  ";
+      lines.push(row(" " + t.fg("accent", marker) + t.fg(picked ? "accent" : "text", m.label) + t.fg("dim", tag)));
       for (const wrapped of wrapTextWithAnsi(m.summary, innerW - 6)) {
         lines.push(row("    " + t.fg("dim", wrapped)));
       }
@@ -101,7 +111,7 @@ export class CapabilitiesPanel implements Focusable {
     }
 
     lines.push(row(""));
-    lines.push(row("  " + t.fg("dim", "press any key")));
+    lines.push(row("  " + t.fg("dim", "↑/↓ choose mode   enter accept")));
     lines.push(t.fg("border", "╰" + "─".repeat(innerW) + "╯"));
 
     this.cachedWidth = width;

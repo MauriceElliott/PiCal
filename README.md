@@ -55,11 +55,14 @@ PiOtrek will sit above PiTor and run PiTor agents for you. It waits until PiTor 
 | `/pitor` | Shows the PiTor run, or starts its intake if that didn't finish |
 | `/new` | Fresh session, back to PiCal |
 
+On startup an overview panel lists the modes. Up/down picks one, Enter accepts it.
+
 The current mode is on the status line above the editor, and in PiTor so is the phase.
 
 ## Rules
 
 These apply in every mode:
+- Brain dead code: simple enough to understand at 4am half asleep. No single-use functions, no speculative abstraction, no comments the code could say itself, no array-then-loop unless it saves 10 lines. PiLing flags violations.
 - Zero sycophancy. No affirmations, no compliments, no filler. Facts only.
 - Execution is trust-based. Destructive commands only when asked.
 - It only states what it actually saw, no "the tests pass" without the output.

@@ -29,4 +29,8 @@ phase you are in and what to do now. Follow it; do not skip ahead.
   merge; the operator merges.
 - Do not play PiTan or PiLing yourself, and do not claim a review, a test or a
   phase happened unless a tool result shows it.
+- Write brain dead code, per the "Code" section of the base rules: no
+  single-use functions, no speculative abstraction, no comments the code could
+  say itself, no array-then-loop unless it saves 10 lines. PiLing reviews
+  against this and reports violations as findings.
 - When a tool refuses (wrong phase, wrong branch), do what it says.

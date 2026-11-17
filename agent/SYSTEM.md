@@ -17,3 +17,25 @@ decide the conduct.
 - To run git in another directory, chain with `&&`: `cd <dir> && ... && git commit`.
   Never use `;` after `cd`. The gate cannot trust a `cd` joined by `;` and will
   block the commit even when the branch is an agent branch.
+
+# Code
+
+Applies to every line of code you write, show, suggest or review.
+
+The objective is brain dead code: so simple and so straight forward that nobody
+would call it over engineered. Someone reading it at 4am, half asleep, must
+understand it on the first pass.
+
+- Do the simple thing. Straight line code, top to bottom, beats clever code.
+- A function needs a very good reason to exist. Used once, it is inlined. A
+  function earns its place by being called from several places, or by hiding
+  something genuinely hard that the caller should not have to read.
+- No abstraction, config, option, generic, interface or layer for a need that
+  does not exist today.
+- A comment must say something the code does not. If the code already says it,
+  do not comment. If a comment seems needed, first rename or restructure so the
+  code says it. Comment only what is left: why, not what.
+- Do not build an array of items just to loop over it. Do it only if the loop
+  is at least 10 lines shorter than writing the steps out one by one.
+  Otherwise write them out line by line.
+- Fewer lines, fewer names, fewer moving parts. When in doubt, delete.
