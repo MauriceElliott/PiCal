@@ -1,7 +1,8 @@
 # PiOtrek reporting — analysis and features
 
-Status: analysis only. No schema, no transport, no field names. Those come
-after the features below are agreed. Not injected into any prompt.
+Status: analysis only. No schema, no transport, no field names. Not injected
+into any prompt. Operator decisions are recorded in section 5; the schema waits
+on the remaining open items there.
 
 ## 1. What the report is for
 
@@ -58,10 +59,10 @@ Certainty is reported as parts the operator can inspect:
 - unknowns the worker hit and did not resolve
 - areas of lower certainty, each with a location (file and range) that can be
   opened in an editor, as PiTor's review step already requires
-- an optional scalar, only as a summary of the above, never the primary signal
+- no scalar. Decided: the percentage is dropped entirely (section 5, item 1)
 Decision changed: which parts get human or adversarial review.
 
-### F5. Complexity: planned versus actual
+### F5. Complexity: planned versus actual   [STUBBED, see section 6]
 The plan states an estimate before work starts (files, size, steps). The harness
 records the actual. The gap is the signal.
 - Observed side: lines, files, hunks, turns, validation loops, tokens, time.
@@ -70,6 +71,8 @@ records the actual. The gap is the signal.
 This is the long-winded-implementation detector. Because the actual side is
 observed, it cannot be gamed by the worker.
 Decision changed: flag for review; suspect a wrong plan; split the feature.
+Status: the report reserves the slot; nothing produces the data yet. The
+measuring side is the static-analysis tool in section 6.
 
 ### F6. Decision record
 Each non-obvious choice: what was chosen, what was rejected, why, and how
@@ -129,26 +132,76 @@ Decision changed: re-validate versus trust.
 - **Self-review.** Author and reviewer sharing context. F8 stays a separate
   voice.
 
-## 5. Open questions for the operator
+## 5. Operator decisions and what remains open
 
-1. Is a scalar certainty wanted at all, or only the decomposed parts (F4)? The
-   original brief asked for a percentage; the analysis says it is the weakest
-   signal.
-2. Who measures the observed fields: the harness around the worker, or the
-   worker running a measuring command? Only the first is tamper-resistant, and
-   the harness does not exist yet.
-3. Which of F1–F13 are required for v1, and which are deferred? F1, F3, F5, F11
-   are the minimum that makes a report checkable.
-4. Is the report a single end-of-run artifact, or does the worker emit one per
-   phase? Per-phase gives early warning and costs more context.
-5. Does the orchestrator ever overrule a worker's status (for example, force
-   "partial" when evidence is missing)? If yes, F1 needs two fields: claimed and
-   accepted.
-6. How long do reports live? A decision record (F6) is useful for years; an
-   attempt history (F10) only until the feature merges.
+Decided:
 
-## 6. Not decided here
+1. **No scalar certainty.** Certainty is reported only as the decomposed parts
+   in F4.
+2. **Observed fields are not measured yet.** The harness does not exist. The
+   report reserves the fields and they are stubbed, with the first producer
+   being a static-analysis tool (section 6) that is to be built or found.
+3. **v1 feature set: F1, F3, F5, F11.** F5 is stubbed per item 2, so a v1
+   report is concretely checkable on F1, F3 and F11 only, with F5 present as an
+   explicit "not measured" value.
+4. **One report per run, emitted when the run produced changes.**
+
+Still open:
+
+- A run that ends blocked or failed with no changes emits no report under item
+  4. The orchestrator then has no record of the attempt, which defeats F9 and
+  F10. Options: emit a minimal report for changeless runs, or log them
+  separately. Not decided.
+- "Not measured" must be distinguishable from "measured, low". Representation
+  is a schema question, deferred, but the requirement is recorded here.
+- Does the orchestrator overrule a worker's status (claimed versus accepted
+  in F1)?
+- Retention: decision records (F6) outlive attempt histories (F10).
+
+## 6. Stub: static change-complexity analysis
+
+Not built. Described so it can be built or replaced by an existing tool later.
+It is the first producer of the observed side of F5 and a targeting input for
+F4's areas of lower certainty.
+
+**Purpose.** Given a base revision and the changed tree, identify where the
+change is particularly complex, so review and re-validation are spent there.
+
+**Properties required.**
+- Runs outside the worker, deterministically, from the diff alone. The worker
+  cannot influence the result.
+- Analyses the change, not the whole repository: changed functions plus a
+  bounded neighbourhood (callers and callees of changed code).
+- Language-aware for the languages in use here; degrades to line and file metrics
+  for the rest, and says which it did.
+- Thresholds are relative to the repository's own baseline, not absolute
+  numbers.
+- Output is a ranked list of hotspots, each with a location that opens in an
+  editor, the metric that triggered it, and its value against the baseline.
+
+**Signals to cover.**
+- Per-function: cyclomatic complexity, cognitive complexity, nesting depth,
+  length, parameter count, and the delta against the base revision.
+- Structural: new coupling between modules, fan-in or fan-out growth, new
+  dependencies, public API or interface changes (feeds F7), duplicated code
+  introduced.
+- Historical: churn on the touched files over recent history, and files
+  repeatedly rewritten within this run.
+- Plan comparison: files and symbols touched that the plan did not list (scope
+  escape in F5).
+
+**Not its job.** Complexity is not correctness and not risk. It does not judge
+whether logic is right, and a high score is a prompt to look, not a defect.
+Reports must not present it as a verdict.
+
+**Evaluate before building.** Whether an existing tool already covers enough:
+candidates to assess are lizard, tree-sitter based tooling, ast-grep, semgrep,
+scc, and per-language tools (radon, eslint complexity rules, and similar).
+Criteria: languages covered, diff-scoped operation, deterministic output,
+machine-readable output, and installability under Nix. No tool is chosen here.
+
+## 7. Not decided here
 
 Field names, schema, file formats, transport, board columns, thresholds for
-"low certainty" or "high complexity", and where the harness runs. These follow
-from section 5.
+"low certainty" or "high complexity", the static-analysis tool, and where the
+harness runs.

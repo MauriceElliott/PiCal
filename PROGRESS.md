@@ -86,15 +86,17 @@ not rendered.
 
 **P6 — reporting spike**, doc only, no code. STATUS: analysis written to
 `agent/modes/piotrek-reporting.md` (features F1-F13, failure modes, open questions);
-schema NOT written, waiting on operator answers to its section 5. Original plan:
+operator answers recorded (no scalar; observed fields stubbed behind a
+static-analysis tool to be built/found; v1 = F1,F3,F5,F11; one report per run with
+changes). Schema NOT written; open items listed in doc section 5. Original plan:
 `agent/modes/piotrek-reporting.md` plus `agent/modes/report.schema.json`
 (JSON Schema 2020-12). Shape agreed so far:
 
 - envelope: `{schema, feature_id, agent_id, phase, attempt, timestamps}`
 - breakdown: subtasks with status and artifacts
-- certainty: a bounded scalar **plus** an evidence array (`command`,
-  `exit_code`, `output_digest`), `assumptions[]`, `unknowns[]`. Rationale:
-  self-reported scalar confidence is unactionable and systematically overconfident
+- certainty: NO scalar (operator decision). `assumptions[]`, `unknowns[]`,
+  low-certainty locations, plus evidence array (`command`, `exit_code`,
+  `output_digest`)
 - complexity: `plan_estimate` vs `actual` (LOC, files, hunks, turns) — the
   long-winded-implementation detector
 - failure: `blocked_by`, `needs_human`
