@@ -53,9 +53,10 @@ export const MODES: readonly ModeDef[] = [
     status: "not-implemented",
     summary: "One feature, start to finish.",
     capabilities: [
-      "phases — plan, design, implement, validate, adversarial review",
-      "iterate — failures return to validation until it passes",
-      "report — changes plus decisions and areas of lower certainty",
+      "flow — intake, design, plan, implement, validate, review, present",
+      "you approve — design and plan are iterated with you; implementation is one shot",
+      "review — PiTan and PiLing on a different vendor family; three fix passes, then you",
+      "git — agent/_ag__br_<name> branch, commits allowed, you merge",
     ],
   },
   {

@@ -44,9 +44,9 @@ At any point you can say: *show progress*, *harder*, *easier*, *just tell me* (a
 
 ### PiTor (not implemented)
 
-Selecting PiTor today gives you an agent that says so. It has write tools and no machinery behind it: no phase runner, no validation loop, no review step. It is told not to pretend otherwise.
+Selecting PiTor today gives you an agent that says so. It has write tools and no machinery behind it: no phase runner, no validation loop, no review step. Its prompt (`agent/modes/pitor.md`) holds the plan below and tells it not to pretend otherwise.
 
-The plan is in [`agent/modes/pitor-requirements.md`](agent/modes/pitor-requirements.md), decided with the operator in rounds. In outline:
+The plan, with its history, is in [`agent/modes/pitor-requirements.md`](agent/modes/pitor-requirements.md), decided with the operator in rounds. In outline:
 
 1. **Intake.** You supply the feature and its acceptance criteria. The clean-tree check happens here: if the working tree has uncommitted or untracked files, it stops and tells you to commit or stash.
 2. **Design**, then **Plan**. Each is an iteration loop with you, then your approval. The plan is frozen on approval.
@@ -85,7 +85,7 @@ A layer above PiTor that will control PiTor sub-agents and act as their operator
 | `/pina`, `/pina on`, `/pina off` | Toggle the Socratic overlay. PiCal only. Does not start a new session. |
 | `/new` | pi's own command: fresh context, starts in PiCal. |
 
-When pi starts it shows a capabilities overview (any key dismisses it), then asks about PiNa if you are in PiCal. The overview is shown again after every `/mode` switch. `/mode` with no argument is how you see which mode you are in.
+When pi starts it shows a capabilities overview (any key dismisses it), then asks about PiNa if you are in PiCal. The overview is shown again after every `/mode` switch. The status line above the editor shows the current mode between the path and the model, for example `π ~/r/project > PiCal + PiNa > gpt-5.3-codex - medium`; an unimplemented mode is shown in the warning colour. `/mode` with no argument lists them.
 
 ## Approval gate
 
@@ -136,7 +136,7 @@ agent/
   modes/
     pical.md                PiCal prompt
     pina.md                 PiNa overlay
-    pitor.md                PiTor prompt (stub, predates the plan below)
+    pitor.md                PiTor prompt: the decided plan, marked not implemented
     pivez.md                empty on purpose
     piotrek.md              PiOtrek notes (not loaded)
     piotrek-reporting.md    analysis of PiOtrek worker reports (not loaded)
@@ -144,7 +144,7 @@ agent/
   extensions/
     modes.ts                modes, /mode, /pina, prompt layering, read-only tools
     approval-gate.ts        the git gate
-    terminal-prompt.ts      footer and editor styling
+    terminal-prompt.ts      status line (path, mode, model, branch, quota) and editor styling
   lib/
     modes-registry.ts       the one place a mode is declared
     capabilities-panel.ts   the startup and mode-switch overview
@@ -155,7 +155,6 @@ PROGRESS.md                 working notes for this configuration
 ## Known limitations
 
 - PiTor, PiTan, PiLing and PiOtrek do not exist yet. Everything under them above is a plan.
-- `modes.ts` publishes the current mode as a status entry (`PiCal + PiNa`, `PiTor (not implemented)`), but `terminal-prompt.ts` blanks the default footer and draws its own status line (path, model, thinking level, git branch, quota) with no mode in it. As written, the mode is not shown there.
-- `agent/modes/pitor.md`, the prompt PiTor loads today, still has the original phase list (plan before design, remote validation, a fail loop) and has not been updated to the plan in `pitor-requirements.md`.
-- The mode, `/mode` and gate behaviour was checked with scripted harnesses and a few probes of a real pi process. The dialog rendering and the interactive popup have not been exercised end to end.
+- The mode, `/mode`, gate and status line behaviour was checked with scripted harnesses and a few probes of a real pi process. The approval dialog and the interactive popup have not been exercised end to end.
+- The capabilities popup is 33 lines tall at 84 columns and does not scroll, so it clips on a shorter terminal.
 - The reviewer spike used one model and one small diff; it shows the mechanism works, not how good the reviews are.

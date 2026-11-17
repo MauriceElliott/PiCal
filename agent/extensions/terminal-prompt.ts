@@ -2,7 +2,7 @@
  * Terminal Prompt Footer + Editor
  *
  * Footer (1 line):
- *   π ~/r/project > claude-sonnet-4.6 - medium >  ⑂ main *2          ◆ 215/300  72%  ↺ May 1
+ *   π ~/r/project > PiCal + PiNa > claude-sonnet-4.6 - medium >  ⑂ main *2     ◆ 215/300  72%  ↺ May 1
  *
  * Editor (no box, ↪ prefix):
  *   ↪ this is my prompt.
@@ -25,6 +25,7 @@ import {
   layoutLeftRight,
 } from "../lib";
 import { execGit, execGh } from "../lib";
+import { readModeState, statusText } from "../lib/modes-registry";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -114,6 +115,24 @@ export default function (pi: ExtensionAPI) {
   const settingsPath = join(process.env.HOME || "", ".pi/agent/settings.json");
   const settings = readJsonConfig<Record<string, unknown>>(settingsPath, {});
 
+  // The current mode, read from the session branch the same way modes.ts and
+  // the approval gate read it. Cached on the leaf id so rendering does not walk
+  // the branch on every keystroke; /pina and /mode append entries, which move
+  // the leaf and invalidate the cache.
+  let modeCache: { leaf: string | null; text: string; warn: boolean } | null = null;
+  function currentMode(ctx: { sessionManager: { getLeafId(): string | null; getBranch(): any[] } }) {
+    try {
+      const leaf = ctx.sessionManager.getLeafId();
+      if (!modeCache || modeCache.leaf !== leaf) {
+        const text = statusText(readModeState(ctx.sessionManager.getBranch()));
+        modeCache = { leaf, text, warn: text.includes("(not implemented)") };
+      }
+      return modeCache;
+    } catch {
+      return { leaf: null, text: "", warn: false }; // stale context: show no mode
+    }
+  }
+
   async function fetchGitBranch(): Promise<void> {
     try {
       gitBranch = await execGit(pi, ["rev-parse", "--abbrev-ref", "HEAD"]);
@@ -140,7 +159,8 @@ export default function (pi: ExtensionAPI) {
     width: number,
     theme: Theme,
     branch: string | null,
-    model: { id: string } | null | undefined
+    model: { id: string } | null | undefined,
+    mode: { text: string; warn: boolean }
   ): string {
     const level = pi.getThinkingLevel();
     const sep = theme.fg("muted", " > ");
@@ -152,7 +172,9 @@ export default function (pi: ExtensionAPI) {
     const dash = theme.fg("dim", " - ");
     const levelStr = theme.fg(thinkingLevelToColor(level), level);
 
-    let left = piGlyph + cwd + sep + modelId + dash + levelStr + theme.fg("dim", " ");
+    const modeStr = mode.text ? sep + theme.fg(mode.warn ? "warning" : "accent", mode.text) : "";
+
+    let left = piGlyph + cwd + modeStr + sep + modelId + dash + levelStr + theme.fg("dim", " ");
 
     if (branch) {
       const branchStr = theme.fg("accent", `⑂ ${branch}`);
@@ -192,7 +214,7 @@ export default function (pi: ExtensionAPI) {
       return {
         invalidate() {},
         render(width: number): string[] {
-          return [buildStatusLine(width, theme, gitBranch, ctx.model)];
+          return [buildStatusLine(width, theme, gitBranch, ctx.model, currentMode(ctx))];
         },
       };
     }, { placement: "aboveEditor" });

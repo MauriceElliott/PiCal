@@ -20,9 +20,10 @@ No commits have been made. Everything below is working-tree only.
 - **The gate is mode-aware**: in PiCal, `git add`/`git commit` are refused with no
   dialog on every branch. **The popup shows after every `/mode` switch**, before
   the PiNa question when entering PiCal.
-- **Open finding:** the mode status entry is not visible, because
-  `terminal-prompt.ts` blanks the default footer and its own status line has no
-  mode. `agent/modes/pitor.md` is stale against the plan.
+- **The mode is now in the status line** (`terminal-prompt.ts`; it was not
+  visible before because that extension blanks the default footer).
+  `agent/modes/pitor.md` is rewritten to the decided plan, still marked not
+  implemented.
 - README rewritten (original text kept where still true).
 - Requirements and decisions for PiTor, PiTan, PiLing live in
   `agent/modes/pitor-requirements.md` (long, layered by round; 7.15 and 7.27 are

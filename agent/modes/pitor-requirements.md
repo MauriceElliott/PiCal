@@ -1214,3 +1214,44 @@ Implementation notes:
 1. Add the mode to the status line (finding 1).
 2. Rewrite `pitor.md` to the decided plan (finding 2). It is still "not
    implemented", so it would remain a spec, not a procedure.
+
+### 7.29 Operator decisions, round twelve (resolves 7.28's open items)
+
+**D45. The mode is shown in the status line.** `terminal-prompt.ts` now includes
+it between the path and the model (`π ~/r/p > PiCal + PiNa > model - level`),
+read from the session branch with `readModeState` and `statusText`, cached on the
+session leaf id so it is not recomputed per keystroke. An unimplemented mode is
+drawn in the warning colour, the others in the accent colour. A stale context
+shows no mode and does not throw. This resolves finding 1 in 7.28.
+
+**D46. `pitor.md` is rewritten to the decided plan.** It remains marked not
+implemented, so it is still a specification and not a procedure. It now carries:
+the seven-step flow (intake with model choice, family warning and clean-tree
+check; design; plan; one-shot implement on `agent/_ag__br_<name>`; local
+validate; review by PiTan then PiLing with the three-return cap; present), the
+operator abstraction (human or PiOtrek), the rules that already hold, and the
+instruction to say so when it disagrees with this document. The PiTor entry in
+the capabilities popup was updated to match. This resolves finding 2 in 7.28.
+
+Verification:
+- Status line: 11 checks through the real extension and widget with a stubbed
+  host (default PiCal, PiNa on, PiTor, PiVez, colour per status, cache keyed on
+  leaf, widths 200 to 40 never overflow, stale context). All pass.
+- Regression: gate 94 + 37 cases, `/mode` flow 28 checks, panel width test at 84,
+  60 and 40 columns. All pass. The PiTor prompt composes as base plus mode text
+  (2 sections).
+- Not exercised: the real TUI rendering of the status line, and PiTor's prompt
+  under a live model.
+
+Costs and notes:
+- The popup is now 33 lines at 84 columns (it was 30) and does not scroll.
+- The PiTor prompt now states the operator touchpoints and the review cap to a
+  model that cannot act on them yet; it is told not to simulate them.
+- `README.md` is updated: status-line sentence added, the two fixed limitations
+  removed, the layout notes for `pitor.md` and `terminal-prompt.ts` corrected.
+
+#### Still open
+
+Nothing from this round. Items still undecided across the document are in 7.26's
+and 7.28's lists that were not answered: the PiVez identity line (7.27 gap 5),
+and the `PiOtrek` questions in 7.4 C10, which wait for PiOtrek.
