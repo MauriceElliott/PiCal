@@ -158,7 +158,7 @@ export default function (pi: ExtensionAPI) {
   });
 
   pi.registerCommand("mode", {
-    description: "Switch mode: pical | pitor | piotrek. No argument lists modes.",
+    description: "Switch mode: pical | pitor | piotrek | pivez. No argument lists modes.",
     handler: async (args, ctx) => {
       const want = args.trim().toLowerCase();
 

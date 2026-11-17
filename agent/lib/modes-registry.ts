@@ -9,7 +9,7 @@
  * body still lives in agent/modes/<file>.
  */
 
-export type ModeId = "pical" | "pitor" | "piotrek";
+export type ModeId = "pical" | "pitor" | "piotrek" | "pivez";
 
 export interface ModeDef {
   id: ModeId;
@@ -64,6 +64,19 @@ export const MODES: readonly ModeDef[] = [
       "board — stories broken into features",
       "orchestration — heavyweight planning model over worker agents",
       "reporting — sureness and complexity per worker result",
+    ],
+  },
+  {
+    id: "pivez",
+    label: "PiVez",
+    file: "pivez.md",
+    readOnly: false,
+    status: "ready",
+    summary: "Open ended. Operator and model, all tools, no mode rules.",
+    capabilities: [
+      "open — no mode prompt, only the SYSTEM.md invariants",
+      "all tools — write and edit available",
+      "no overlay — PiNa does not apply",
     ],
   },
 ];
