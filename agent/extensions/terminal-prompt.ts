@@ -26,6 +26,7 @@ import {
 } from "../lib";
 import { execGit, execGh } from "../lib";
 import { readModeState, statusText } from "../lib/modes-registry";
+import { readPitorState } from "../lib/pitor-state";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -124,7 +125,10 @@ export default function (pi: ExtensionAPI) {
     try {
       const leaf = ctx.sessionManager.getLeafId();
       if (!modeCache || modeCache.leaf !== leaf) {
-        const text = statusText(readModeState(ctx.sessionManager.getBranch()));
+        const branch = ctx.sessionManager.getBranch();
+        const ms = readModeState(branch);
+        let text = statusText(ms);
+        if (ms.mode === "pitor") text += ` · ${readPitorState(branch).phase ?? "intake"}`;
         modeCache = { leaf, text, warn: text.includes("(not implemented)") };
       }
       return modeCache;

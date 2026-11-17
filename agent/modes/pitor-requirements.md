@@ -1266,3 +1266,88 @@ the README were updated to match. PiVez's prompt is now two sections (base plus
 this text), not the base alone.
 
 **D48. PiOtrek is left as it is** (design notes, not a mode, not implemented).
+
+### 7.31 PiTor implemented (flow and review spawn only)
+
+Scope agreed with the operator: the flow and the reviewer spawn, nothing else.
+Phases are advanced by the model calling tools; the extension holds state and
+shows the operator's dialogs. Per-phase tool restriction is out (accepted).
+Review findings are plain text ending in `Verdict: PASS` or `Verdict: FINDINGS`.
+
+Out of scope, not built: the report (F1 to F13), static analysis, a PiOtrek
+interface, remote validation, budgets and timeouts, opening `hx` from the TUI
+(the model prints `hx path:line` lines instead).
+
+#### Files
+
+| File | Role |
+|---|---|
+| `agent/lib/pitor-state.ts` | phases, state read from `"pitor"` session entries (last write per field wins), vendor-family mapping, the per-phase prompt section, the PiTor tool names |
+| `agent/lib/pitor-intake.ts` | intake: git repo and clean tree, feature, acceptance criteria, reviewer model, family warning and confirm. Writes nothing unless every step is answered |
+| `agent/lib/pitor-review.ts` | the change (`git diff <base>` plus untracked files, diff capped at 150,000 characters), PiTan/PiLing sessions through the SDK, verdict parsing, transcript sanitising for the PiTan seed, the reviewer tasks |
+| `agent/extensions/pitor.ts` | tools `pitor_approve`, `pitor_implementation_done`, `pitor_validation_done`, `pitor_review`, `pitor_hand_back`; command `/pitor` |
+| `agent/modes/pitan.md`, `piling.md` | reviewer overlays; each reviewer's prompt is `SYSTEM.md` plus its overlay |
+| `agent/modes/pitor.md` | now the working mode prompt |
+| `agent/extensions/modes.ts` | runs intake after the overview on entering PiTor; adds the run section to the prompt; hides PiTor tools outside PiTor |
+| `agent/extensions/terminal-prompt.ts` | status line shows `PiTor · <phase>` |
+| `agent/lib/modes-registry.ts` | PiTor status `ready` |
+
+#### How the decisions map to the code
+
+- Intake on entering PiTor (D9, D24, D26): clean tree including untracked files;
+  reviewer list puts other families first; same or unknown family asks for
+  confirmation. Author model is the session's model (D1).
+- Design then plan, each approved by the operator (D: answers 4, 5); approval
+  records the document and freezes it into the run section.
+- Implement on `agent/_ag__br_<name>` (D36): `pitor_implementation_done`
+  refuses unless the current branch starts with the prefix. One shot: a failed
+  validation stops and goes to the operator; `pitor_hand_back` at any time.
+- Review (D17, D18, D21, D22, D25, D27, D28, D29, D32, D33): PiTan first,
+  seeded once per review phase with the author's branch and kept in memory
+  across re-runs; a clean PiTan pass runs PiLing in the same call; PiLing fresh
+  every run; the same reviewer re-runs after a fix; clean passes do not count;
+  three findings returns go to the author, the next result goes to the operator
+  with the phase set to present.
+- Reviewers carry `SYSTEM.md` (D34) because the seed does not (D31).
+
+#### Found during testing, and fixed
+
+PiTan's first real run did not know the acceptance criteria: they come from the
+intake dialogs and the author's system prompt, neither of which is in the
+transcript it is seeded with. Its first-run task now restates the feature,
+criteria, design and plan. After the fix, a real PiTan run cited the criteria
+and caught a criterion violation it had missed before.
+
+#### Verified
+
+- Module load: all seven extension and library files load under jiti.
+- Flow: 24 checks through a stub pi host with a real git repository in `/tmp`
+  (tools hidden in PiCal; dirty tree stops intake; same-family warning and
+  decline writes nothing; reviewer order; intake state; prompt section per
+  phase; wrong-phase refusals; reject and approve; branch check; validation
+  failure and pass; hand back; `/pitor`; refusal outside PiTor; status line).
+- Review with real models (`github-copilot/gpt-5.3-codex`, author transcript
+  from a real Opus session): buggy code returned FINDINGS from PiTan (fix pass
+  1); after a fix PiTan passed and PiLing ran fresh and passed (phase present);
+  with three fix passes used and a bug reintroduced, PiLing returned FINDINGS
+  and the result went to the operator (cap reached, phase present). Cost of all
+  reviewer runs: about $0.08.
+- Real pi: with the whole configuration loaded, the five tools are registered,
+  hidden in PiCal along with `write` and `edit`; `/mode`, `/pina`, `/pitor` are
+  registered. No model call.
+- Regression: gate 94 + 37 cases, `/mode` flow 28, status line 12, panel widths.
+
+Not verified: a full PiTor run driven by a live author model in the TUI (the
+author model choosing to call the tools at the right times); the dialogs
+rendering in the TUI; a reload mid-review (PiTan is re-seeded, by design, but
+untested); large diffs and long transcripts; aborting a review.
+
+#### Known limits
+
+1. PiTan's kept session lives in memory: a reload or crash re-seeds it.
+2. The model drives the phases. The extension refuses out-of-phase tool calls,
+   but nothing stops the model editing files during design (accepted).
+3. Validation results are the model's report, not measured by the harness.
+4. A missing verdict line counts as FINDINGS and uses a fix pass.
+5. The git gate still applies: `git switch -c agent/_ag__br_<name>` and commits
+   there pass; push and merge get a dialog.

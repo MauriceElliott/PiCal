@@ -21,7 +21,7 @@ PiNa is an overlay on PiCal for when you want to be taught a topic properly, off
 
 It is designed with 1 simple goal, make you prove you know it. It is off by default; PiCal asks whether you want it when it starts, and `/pina` turns it on or off. It only kicks in when you ask to be taught ("teach me", "quiz me", "drill me"), a one-off question still gets a normal answer.
 
-## PiTor (not implemented yet)
+## PiTor
 
 PiTor is the mode for when you do want the work done, one feature at a time, while still offering you the following benefits:
 - A design partner
@@ -30,7 +30,7 @@ PiTor is the mode for when you do want the work done, one feature at a time, whi
 - Two reviewers from a different model family than the author, PiTan (who has the author's context) and PiLing (who doesn't)
 - A hand-off of the changes, the decisions, and the bits it is least sure of, ready to open in helix
 
-It is designed with 1 simple goal, do the work without taking the decisions away from you. You give it the acceptance criteria, you approve the design and the plan, it comes back to you when it gets stuck, and you merge. Selecting it today gets you an agent that tells you it isn't built yet; the plan is in [`agent/modes/pitor-requirements.md`](agent/modes/pitor-requirements.md).
+It is designed with 1 simple goal, do the work without taking the decisions away from you. You give it the acceptance criteria, you approve the design and the plan, it comes back to you when it gets stuck, and you merge. Switch to it with `/mode pitor` inside a git repository with a clean work tree; it asks for the feature, the acceptance criteria and the reviewer model, then works through design, plan, implement, validate, review and present. `/pitor` shows where the run is. The full spec is in [`agent/modes/pitor-requirements.md`](agent/modes/pitor-requirements.md).
 
 ## PiVez
 
@@ -52,9 +52,10 @@ PiOtrek will sit above PiTor and run PiTor agents for you. It waits until PiTor 
 | `/mode` | Lists the modes |
 | `/mode pical`, `/mode pitor`, `/mode pivez` | Switches mode. This starts a new session, the conversation doesn't come with you |
 | `/pina` | Turns PiNa on or off, PiCal only |
+| `/pitor` | Shows the PiTor run, or starts its intake if that didn't finish |
 | `/new` | Fresh session, back to PiCal |
 
-The current mode is on the status line above the editor.
+The current mode is on the status line above the editor, and in PiTor so is the phase.
 
 ## Rules
 

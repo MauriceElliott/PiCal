@@ -7,6 +7,7 @@
  *   event.systemPrompt   ← SYSTEM.md invariants, rendered by pi
  * + agent/modes/<mode>.md
  * + agent/modes/pina.md  ← only when mode is "pical" and PiNa is on
+ * + PiTor run section    ← only when mode is "pitor" (lib/pitor-state.ts)
  *
  * State is per-branch: appended with pi.appendEntry("modes", { mode, pina })
  * and restored from ctx.sessionManager.getBranch() on session_start, so a
@@ -34,6 +35,8 @@ import {
   WRITE_TOOLS,
 } from "../lib/modes-registry";
 import { CapabilitiesPanel } from "../lib/capabilities-panel";
+import { runIntake } from "../lib/pitor-intake";
+import { PITOR_TOOLS, pitorPromptSection, readPitorState } from "../lib/pitor-state";
 
 const AGENT_DIR = process.env.PI_CODING_AGENT_DIR ?? join(homedir(), ".pi", "agent");
 const MODES_DIR = join(AGENT_DIR, "modes");
@@ -76,7 +79,9 @@ function baseToolNames(pi: ExtensionAPI): string[] {
 }
 
 function applyTools(pi: ExtensionAPI): void {
-  const base = baseToolNames(pi);
+  let base = baseToolNames(pi);
+  // PiTor's flow tools exist only in PiTor.
+  if (state.mode !== "pitor") base = base.filter((n) => !PITOR_TOOLS.has(n));
   pi.setActiveTools(modeDef(state.mode).readOnly ? base.filter((n) => !WRITE_TOOLS.has(n)) : base);
 }
 
@@ -131,7 +136,13 @@ export default function (pi: ExtensionAPI) {
       await showCapabilities(ctx);
     }
 
-    // 2. The PiNa question, once per branch, PiCal only.
+    // 2. PiTor: intake, once per session, after the overview.
+    if (state.mode === "pitor") {
+      if (!readPitorState(ctx.sessionManager.getBranch()).phase) await runIntake(pi, ctx);
+      return;
+    }
+
+    // 3. The PiNa question, once per branch, PiCal only.
     if (state.mode !== "pical" || hasDecision(ctx)) return;
 
     const enable = await ctx.ui.confirm(
@@ -154,11 +165,17 @@ export default function (pi: ExtensionAPI) {
     };
   });
 
-  pi.on("before_agent_start", async (event) => {
+  pi.on("before_agent_start", async (event, ctx) => {
     const sections = [event.systemPrompt.trim()];
 
     const modePrompt = promptFor(modeDef(state.mode).file);
     if (modePrompt) sections.push(modePrompt);
+
+    // PiTor: where the run is and what to do now. Rebuilt every run from the
+    // session's "pitor" entries, so a phase change shows on the next message.
+    if (state.mode === "pitor") {
+      sections.push(pitorPromptSection(readPitorState(ctx.sessionManager.getBranch())));
+    }
 
     // PiNa is a PiCal-only overlay. It narrows PiCal, never replaces it.
     if (state.mode === "pical" && state.pina) {

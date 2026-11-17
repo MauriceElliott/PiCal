@@ -50,7 +50,7 @@ export const MODES: readonly ModeDef[] = [
     label: "PiTor",
     file: "pitor.md",
     readOnly: false,
-    status: "not-implemented",
+    status: "ready",
     summary: "One feature, start to finish.",
     capabilities: [
       "flow — intake, design, plan, implement, validate, review, present",

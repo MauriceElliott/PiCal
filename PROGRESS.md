@@ -30,6 +30,13 @@ No commits have been made. Everything below is working-tree only.
   `agent/modes/pitor-requirements.md` (long, layered by round; 7.15 and 7.27 are
   the current summaries).
 
+## Update: PiTor implemented (flow + review spawn)
+
+See `agent/modes/pitor-requirements.md` 7.31 for files, mapping to decisions,
+tests, and limits. New: `extensions/pitor.ts`, `lib/pitor-state.ts`,
+`lib/pitor-intake.ts`, `lib/pitor-review.ts`, `modes/pitan.md`,
+`modes/piling.md`. Not yet run end to end with a live author in the TUI.
+
 ## Where it stands
 
 Phases 0, 1, 2, 3 and 5 of the agreed plan are done and verified against a
