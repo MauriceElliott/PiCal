@@ -16,9 +16,11 @@
  */
 
 import type { AgentSession, ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
+import { Text } from "@mariozechner/pi-tui";
 import { execFileSync } from "node:child_process";
 import { Type } from "typebox";
 import { readModeState } from "../lib/modes-registry";
+import { ApprovalPanel } from "../lib/pitor-approval-panel";
 import { runIntake } from "../lib/pitor-intake";
 import {
   collectChange,
@@ -88,13 +90,26 @@ export default function (pi: ExtensionAPI) {
       document: Type.String({ description: "The full design document or plan, as it should be recorded." }),
     }),
     executionMode: "sequential",
+    renderCall(args, theme) {
+      return new Text(theme.fg("toolTitle", theme.bold("PiTor: ask for approval")) + " " + theme.fg("muted", args.phase), 0, 0);
+    },
     async execute(_id, params, _signal, _onUpdate, ctx) {
       const g = guard(ctx, [params.phase]);
       if ("error" in g) return text(g.error);
       if (!ctx.hasUI) return text("No UI to ask the operator. Stop and wait.");
 
-      const choice = await ctx.ui.select(`PiTor — approve the ${params.phase}?`, ["Approve", "Request changes"]);
-      if (choice !== "Approve") {
+      const approved = await ctx.ui.custom<boolean>(
+        (_tui, theme, _kb, done) => {
+          const panel = new ApprovalPanel(theme, ` PiTor — approve the ${params.phase}? `, params.document, done);
+          panel.focused = true;
+          return panel;
+        },
+        {
+          overlay: true,
+          overlayOptions: { width: "90%", minWidth: 60, maxWidth: 84, maxHeight: "95%" },
+        },
+      );
+      if (!approved) {
         const note = (await ctx.ui.input(`PiTor — what should change in the ${params.phase}?`))?.trim();
         return text(
           `The operator did not approve the ${params.phase}.` +
