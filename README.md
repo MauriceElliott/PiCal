@@ -1,6 +1,6 @@
 # PiCal
 
-PiCal is a Pi configuration designed to stop your skills atrophying while still offering you the following benefits:
+PiCal (pronounced Pee-Cal) is a Pi configuration designed to stop your skills atrophying while still offering you the following benefits:
 - An on the job tutor
 - A Rubber duck
 - A quick reference
@@ -12,38 +12,28 @@ It is designed with 1 simple goal, help your thinking instead of doing it for yo
 
 ### PiNa
 
-PiNa is an overlay on PiCal for when you want to be taught a topic properly, offering you the following on top:
+PiNa (pronounced Pee-Na) is an overlay on PiCal for when you want to be taught a topic properly, offering you the following on top:
 - A diagnostic to find out what you already know
 - A skill map, levels 0 to 5, that you have to earn
 - One question at a time, and no answers handed over
 - Spaced review of things you thought you had nailed
 - A final exam
 
-It is designed with 1 simple goal, make you prove you know it. It is off by default; PiCal asks whether you want it when it starts, and `/pina` turns it on or off. It only kicks in when you ask to be taught ("teach me", "quiz me", "drill me"), a one-off question still gets a normal answer.
+Based on this skill from [jane street](https://github.com/janestreet/agent_skills/blob/master/socratic-tutor/SKILL.md)
 
 ## PiTor
 
-PiTor is the mode for when you do want the work done, one feature at a time, while still offering you the following benefits:
-- A design partner
-- A planner
-- A one shot implementer, working on its own `agent/_ag__br_<name>` branch
-- Two reviewers from a different model family than the author, PiTan (who has the author's context) and PiLing (who doesn't)
-- A hand-off of the changes, the decisions, and the bits it is least sure of, ready to open in helix
-
-It is designed with 1 simple goal, do the work without taking the decisions away from you. You give it the acceptance criteria, you approve the design and the plan, it comes back to you when it gets stuck, and you merge. Switch to it with `/mode pitor` inside a git repository with a clean work tree; it asks for the feature, the acceptance criteria and the reviewer model, then works through design, plan, implement, validate, review and present. `/pitor` shows where the run is. The full spec is in [`agent/modes/pitor-requirements.md`](agent/modes/pitor-requirements.md).
+PiTor (prounced Peter) is a mode designed for full feature creation, i.e. spec, design, to plan, to implementation to review.
+It is essentially designed to be a worker, I'm looking at this with the intent of it have a **mid tier** model, something like a sonnet or deepseek flash. It will eventually be used by the orchestrator mode PiOtrek. It has a review with context by a second model, and then a review without context in an adversarial capacity with another model.
+To use it, enter the mode with a clean work tree, i.e. commit or stash any existing changes include untracked files. If you forget to the this, once in the mode start it using /pitor. 
 
 ## PiVez
 
-PiVez is the way out of any mode, offering you the following:
-- No mode rules
-- All the tools
-- Nothing but the base rules
-
-It is designed with 1 simple goal, get out of the way.
+PiVez (pronounced Peeves) is a mode that only has the base rules applied, i.e. no sychophancy, brain dead code etc.
 
 ## PiOtrek (not a mode, not implemented)
 
-PiOtrek will sit above PiTor and run PiTor agents for you. It waits until PiTor is solid; notes are in [`agent/modes/piotrek.md`](agent/modes/piotrek.md).
+PiOtrek (pronounced Pee-Ot-rek) will sit above PiTor and run PiTor agents for you. It waits until PiTor is solid; notes are in [`agent/modes/piotrek.md`](agent/modes/piotrek.md).
 
 ## Commands
 

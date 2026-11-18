@@ -39,3 +39,8 @@ understand it on the first pass.
   is at least 10 lines shorter than writing the steps out one by one.
   Otherwise write them out line by line.
 - Fewer lines, fewer names, fewer moving parts. When in doubt, delete.
+
+# Tools
+- ddgr is available for searching the web.
+- helix as an editor, so if there's a change you think needs to be made, you can quote it using `hx path/to/file.ext:{line_number}`
+- check /etc/nixos for details on what's available in the path.
