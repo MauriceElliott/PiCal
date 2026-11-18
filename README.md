@@ -1,4 +1,7 @@
 # PiCal
+PiCal is my own personal agent harness, its main focus is to support my workflow. I generally like to code by hand, so the default state is PiCal, but it has other modes like PiNa which is a Socratic tutor layer for PiCal, then PiTor, which is a one shot feature mode with a rigerous planning and review phase. There other modes as well, feel free to try them out, fork this project to extend, or just pick a particular mode that strikes your fancy. The objective with this is to match your needs and prefered workflow, not mould yourself to fit the needs of an agentic workflow. 
+
+## PiCal (mode)
 
 PiCal (pronounced Pee-Cal) is a Pi configuration designed to stop your skills atrophying while still offering you the following benefits:
 - An on the job tutor
@@ -10,7 +13,7 @@ PiCal (pronounced Pee-Cal) is a Pi configuration designed to stop your skills at
 
 It is designed with 1 simple goal, help your thinking instead of doing it for you. The cal in PiCal is from Cal Newport, the writer of DeepWork, and Digital Minimalism, both of which implore readers take head space, think for themselves, and to not become another money bag for the attention economy.
 
-### PiNa
+### PiNa (overlay)
 
 PiNa (pronounced Pee-Na) is an overlay on PiCal for when you want to be taught a topic properly, offering you the following on top:
 - A diagnostic to find out what you already know
@@ -21,17 +24,17 @@ PiNa (pronounced Pee-Na) is an overlay on PiCal for when you want to be taught a
 
 Based on this skill from [jane street](https://github.com/janestreet/agent_skills/blob/master/socratic-tutor/SKILL.md)
 
-## PiTor
+## PiTor (mode)
 
 PiTor (prounced Peter) is a mode designed for full feature creation, i.e. spec, design, to plan, to implementation to review.
 It is essentially designed to be a worker, I'm looking at this with the intent of it have a **mid tier** model, something like a sonnet or deepseek flash. It will eventually be used by the orchestrator mode PiOtrek. It has a review with context by a second model, and then a review without context in an adversarial capacity with another model.
 To use it, enter the mode with a clean work tree, i.e. commit or stash any existing changes include untracked files. If you forget to the this, once in the mode start it using /pitor. 
 
-## PiVez
+## PiVez (mode/modeless)
 
 PiVez (pronounced Peeves) is a mode that only has the base rules applied, i.e. no sychophancy, brain dead code etc.
 
-## PiOtrek (not a mode, not implemented)
+## PiOtrek (mode, not implemented)
 
 PiOtrek (pronounced Pee-Ot-rek) will sit above PiTor and run PiTor agents for you. It waits until PiTor is solid; notes are in [`agent/modes/piotrek.md`](agent/modes/piotrek.md).
 
